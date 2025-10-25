@@ -1,30 +1,31 @@
 // backend/validators/hospitalValidator.ts
-import Joi from 'joi';
+import * as Joi from "joi";
 
 export const hospitalCreateSchema = Joi.object({
-  name: Joi.string().required(),
+  name: Joi.string().min(2).max(200).required(),
   email: Joi.string().email().required(),
-  phone: Joi.string().optional(),
-  contactPerson: Joi.string().optional(),
-  address: Joi.string().optional(),
-  city: Joi.string().optional(),
-  state: Joi.string().optional(),
-  zip: Joi.string().optional(),
-  country: Joi.string().optional(),
-  dlNumber: Joi.string().optional(),
-  gstNumber: Joi.string().optional(),
+  phone: Joi.string().optional().allow("", null),
+  contactPerson: Joi.string().optional().allow("", null),
+  address: Joi.string().optional().allow("", null),
+  city: Joi.string().optional().allow("", null),
+  state: Joi.string().optional().allow("", null),
+  zip: Joi.string().optional().allow("", null),
+  country: Joi.string().optional().allow("", null),
+  dlNumber: Joi.string().optional().allow("", null),
+  gstNumber: Joi.string().optional().allow("", null)
 });
 
 export const hospitalUpdateSchema = Joi.object({
-  name: Joi.string(),
-  email: Joi.string().email(),
-  phone: Joi.string(),
-  contactPerson: Joi.string(),
-  address: Joi.string(),
-  city: Joi.string(),
-  state: Joi.string(),
-  zip: Joi.string(),
-  country: Joi.string(),
-  dlNumber: Joi.string(),
-  gstNumber: Joi.string(),
+  name: Joi.string().min(2).max(200).optional(),
+  email: Joi.string().email().optional(),
+  phone: Joi.string().optional().allow("", null),
+  contactPerson: Joi.string().optional().allow("", null),
+  address: Joi.string().optional().allow("", null),
+  city: Joi.string().optional().allow("", null),
+  state: Joi.string().optional().allow("", null),
+  zip: Joi.string().optional().allow("", null),
+  country: Joi.string().optional().allow("", null),
+  dlNumber: Joi.string().optional().allow("", null),
+  gstNumber: Joi.string().optional().allow("", null),
+  approved: Joi.boolean().optional()
 });

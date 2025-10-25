@@ -1,30 +1,54 @@
+// src/models/Product.ts
 import { Schema, model, Document } from "mongoose";
+import { toJSONPlugin } from "./plugins/mongoose-plugins";
 
 export interface IProduct extends Document {
   name: string;
-  category: string;
+  genericName?: string;
+  category?: string;
   description?: string;
   brand?: string;
-  price: number;
-  unit: string; // e.g. tablet, box, bottle
+  manufacturer?: string;
+  strength?: string;
+  packSize?: string;
+  sku?: string;
+  hsnCode?: string;
+  regulatoryTag?: string; // Rx / OTC
+  mrp?: number;
+  tradePrice?: number;
+  unit?: string;
   images?: string[];
-  createdBy: Schema.Types.ObjectId; // Supplier or Admin
+  createdBy: Schema.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const productSchema = new Schema<IProduct>(
+const ProductSchema = new Schema<IProduct>(
   {
-    name: { type: String, required: true },
-    category: { type: String, required: true },
+    name: { type: String, required: true, trim: true },
+    genericName: { type: String, trim: true },
+    category: { type: String, index: true },
     description: String,
     brand: String,
-    price: { type: Number, required: true },
-    unit: { type: String, required: true },
+    manufacturer: String,
+    strength: String,
+    packSize: String,
+    sku: { type: String, index: true, sparse: true },
+    hsnCode: String,
+    regulatoryTag: String,
+    mrp: Number,
+    tradePrice: Number,
+    unit: String,
     images: [String],
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true }
 );
 
-export default model<IProduct>("Product", productSchema);
+// full-text index for search
+ProductSchema.index({ name: "text", genericName: "text", brand: "text", description: "text" });
+
+// plugin
+ProductSchema.plugin(toJSONPlugin);
+
+export default model<IProduct>("Product", ProductSchema);

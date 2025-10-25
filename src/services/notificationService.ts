@@ -1,20 +1,25 @@
-// backend/services/notificationService.ts
-import Notification from '../models/Notification';
+// src/services/notificationService.ts
+import Notification from "../models/Notification";
+import { Types } from "mongoose";
+import { toObjectId } from "../utils/oObjectId";
 
-class NotificationService {
-  static async createNotification(userId: string, message: string) {
-    const notification = await Notification.create({ userId, message });
-    return notification;
-  }
+const NotificationService = {
+  async createNotification(userId: string, message: string, meta?: any) {
+    const n = await Notification.create({
+      user: new Types.ObjectId(userId),
+      message,
+      meta,
+    });
+    return n;
+  },
 
-  static async getNotifications(userId: string) {
-    return Notification.find({ userId }).sort({ createdAt: -1 });
-  }
+  async getNotifications(userId: string) {
+    return Notification.find({ user: toObjectId(userId) }).sort({ createdAt: -1 });
+  },
 
-  static async markAsRead(notificationId: string) {
-    const notification = await Notification.findByIdAndUpdate(notificationId, { read: true }, { new: true });
-    return notification;
-  }
-}
+  async markAsRead(notificationId: string) {
+    return Notification.findByIdAndUpdate(notificationId, { read: true }, { new: true });
+  },
+};
 
 export default NotificationService;

@@ -1,31 +1,37 @@
-// backend/services/productService.ts
-import Product from '../models/Product';
+// src/services/productService.ts
+import Product from "../models/Product";
+import { Types } from "mongoose";
+import { toObjectId } from "../utils/oObjectId";
 
-class ProductService {
-  static async addProduct({ name, brand, category, stock, supplierId, price }: any) {
-    const product = await Product.create({ name, brand, category, stock, supplierId, price });
-    return product;
-  }
+const ProductService = {
+  async addProduct(payload: any) {
+    // payload should include createdBy (supplier id)
+    const doc = await Product.create({
+      ...payload,
+      createdBy: payload.createdBy ? toObjectId(payload.createdBy) : undefined,
+    });
+    return doc;
+  },
 
-  static async updateProduct(productId: string, data: any) {
-    const product = await Product.findByIdAndUpdate(productId, data, { new: true });
-    if(!product) throw new Error('Product not found');
-    return product;
-  }
+  async updateProduct(productId: string, payload: any) {
+    const doc = await Product.findByIdAndUpdate(productId, payload, { new: true });
+    if (!doc) throw new Error("Product not found");
+    return doc;
+  },
 
-  static async deleteProduct(productId: string) {
-    const product = await Product.findByIdAndDelete(productId);
-    if(!product) throw new Error('Product not found');
-    return product;
-  }
+  async deleteProduct(productId: string) {
+    const doc = await Product.findByIdAndDelete(productId);
+    if (!doc) throw new Error("Product not found");
+    return doc;
+  },
 
-  static async getProductsBySupplier(supplierId: string) {
-    return Product.find({ supplierId });
-  }
+  async getProductsBySupplier(supplierId: string) {
+    return Product.find({ createdBy: toObjectId(supplierId) });
+  },
 
-  static async getAllProducts() {
+  async getAllProducts() {
     return Product.find();
-  }
-}
+  },
+};
 
 export default ProductService;

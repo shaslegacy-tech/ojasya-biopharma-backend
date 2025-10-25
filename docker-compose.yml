@@ -1,0 +1,47 @@
+version: "3.8"
+services:
+  mongo:
+    image: mongo:6
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+    # optional: if you want a single-node replica set to support transactions,
+    # you will need to start with command and initiate replSet; omitted for simplicity.
+
+  app:
+    build: .
+    depends_on:
+      - mongo
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/ojasya_biopharma
+      - JWT_SECRET=supersecret
+      - NODE_ENV=development
+      - CLIENT_ORIGIN=http://localhost:3000
+      - API_PREFIX=/api/v1
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./uploads:/app/uploads   # bind-mount uploads for dev
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Optional admin UI for Mongo
+  mongo-express:
+    image: mongo-express
+    depends_on:
+      - mongo
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: password
+    ports:
+      - "8081:8081"
+
+volumes:
+  mongo-data:

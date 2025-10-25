@@ -1,0 +1,768 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Ojasya Biopharma API",
+    "version": "1.1.0",
+    "description": "Comprehensive OpenAPI spec for Ojasya Biopharma (auth, users, products, inventory, stock, orders, MR visits, shipments, warehouses, notifications, commissions, admin)."
+  },
+  "servers": [
+    { "url": "http://localhost:8000/api/v1", "description": "Local dev" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" },
+      "cookieAuth": { "type": "apiKey", "in": "cookie", "name": "token" }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" },
+          "error": { "type": "string" },
+          "details": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "phone": { "type": "string" },
+          "role": { "type": "string", "enum": ["admin", "mr", "supplier", "hospital", "pharmacy"] },
+          "approved": { "type": "boolean" }
+        },
+        "required": ["id", "name", "role"]
+      },
+
+      "AuthRegister": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "format": "password" },
+          "role": { "type": "string", "enum": ["admin", "mr", "supplier", "hospital", "pharmacy"] }
+        },
+        "required": ["email", "password", "role"]
+      },
+
+      "AuthLogin": {
+        "type": "object",
+        "properties": { "email": { "type": "string", "format": "email" }, "password": { "type": "string" } },
+        "required": ["email", "password"]
+      },
+
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" },
+          "data": {
+            "type": "object",
+            "properties": { "user": { "$ref": "#/components/schemas/User" } }
+          }
+        }
+      },
+
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "genericName": { "type": "string" },
+          "brand": { "type": "string" },
+          "manufacturer": { "type": "string" },
+          "category": { "type": "string" },
+          "strength": { "type": "string" },
+          "packSize": { "type": "string" },
+          "sku": { "type": "string" },
+          "regulatoryTag": { "type": "string" },
+          "mrp": { "type": "number" },
+          "tradePrice": { "type": "number" },
+          "unit": { "type": "string" },
+          "images": { "type": "array", "items": { "type": "string" } },
+          "createdBy": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "name"]
+      },
+
+      "ProductCreate": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "genericName": { "type": "string" },
+          "brand": { "type": "string" },
+          "manufacturer": { "type": "string" },
+          "category": { "type": "string" },
+          "strength": { "type": "string" },
+          "packSize": { "type": "string" },
+          "sku": { "type": "string" },
+          "mrp": { "type": "number" },
+          "tradePrice": { "type": "number" },
+          "unit": { "type": "string" },
+          "images": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["name", "mrp"]
+      },
+
+      "Inventory": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "product": { "type": "string" },
+          "supplier": { "type": "string" },
+          "warehouse": { "type": "string" },
+          "batchNo": { "type": "string" },
+          "manufactureDate": { "type": "string", "format": "date" },
+          "expiryDate": { "type": "string", "format": "date" },
+          "availableQty": { "type": "integer" },
+          "reservedQty": { "type": "integer" },
+          "costPrice": { "type": "number" },
+          "threshold": { "type": "integer" }
+        },
+        "required": ["id", "product", "supplier", "availableQty"]
+      },
+
+      "InventoryCreate": {
+        "type": "object",
+        "properties": {
+          "product": { "type": "string" },
+          "supplier": { "type": "string" },
+          "warehouse": { "type": "string" },
+          "batchNo": { "type": "string" },
+          "manufactureDate": { "type": "string", "format": "date" },
+          "expiryDate": { "type": "string", "format": "date" },
+          "availableQty": { "type": "integer" },
+          "costPrice": { "type": "number" },
+          "threshold": { "type": "integer" }
+        },
+        "required": ["product", "supplier", "availableQty"]
+      },
+
+      "Stock": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "product": { "type": "string" },
+          "hospital": { "type": "string" },
+          "supplier": { "type": "string" },
+          "quantity": { "type": "integer" },
+          "threshold": { "type": "integer" }
+        },
+        "required": ["id", "product", "hospital"]
+      },
+
+      "Hospital": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "userId": { "type": "string" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "contactPerson": { "type": "string" },
+          "address": { "type": "string" },
+          "city": { "type": "string" },
+          "state": { "type": "string" },
+          "zip": { "type": "string" },
+          "country": { "type": "string" },
+          "dlNumber": { "type": "string" },
+          "gstNumber": { "type": "string" },
+          "approved": { "type": "boolean" }
+        },
+        "required": ["id", "name", "email"]
+      },
+
+      "HospitalCreate": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "contactPerson": { "type": "string" },
+          "address": { "type": "string" }
+        },
+        "required": ["name", "email"]
+      },
+
+      "OrderItem": {
+        "type": "object",
+        "properties": {
+          "product": { "type": "string" },
+          "qty": { "type": "integer" },
+          "price": { "type": "number" },
+          "batchNo": { "type": "string" }
+        },
+        "required": ["product", "qty"]
+      },
+
+      "OrderCreate": {
+        "type": "object",
+        "properties": {
+          "customer": { "type": "string" },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/OrderItem" } },
+          "source": { "type": "string" },
+          "assignedSupplier": { "type": "string" },
+          "paymentStatus": { "type": "string", "enum": ["UNPAID", "PAID", "REFUNDED"] },
+          "prescriptionFileUrl": { "type": "string" }
+        },
+        "required": ["customer", "items"]
+      },
+
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "orderNo": { "type": "string" },
+          "customer": { "type": "string" },
+          "placedBy": { "type": "string" },
+          "source": { "type": "string" },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/OrderItem" } },
+          "assignedSupplier": { "type": "string" },
+          "status": { "type": "string" },
+          "totalAmount": { "type": "number" },
+          "paymentStatus": { "type": "string" },
+          "prescriptionFileUrl": { "type": "string" }
+        },
+        "required": ["id", "customer", "placedBy", "items"]
+      },
+
+      "MRVisit": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "mr": { "type": "string" },
+          "customer": { "type": "string" },
+          "checkin": {
+            "type": "object",
+            "properties": { "lat": { "type": "number" }, "lng": { "type": "number" }, "time": { "type": "string", "format": "date-time" } }
+          },
+          "checkout": {
+            "type": "object",
+            "properties": { "lat": { "type": "number" }, "lng": { "type": "number" }, "time": { "type": "string", "format": "date-time" } }
+          },
+          "notes": { "type": "string" },
+          "ordersCreated": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["id", "mr", "customer", "checkin"]
+      },
+
+      "Shipment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "order": { "type": "string" },
+          "courier": { "type": "string" },
+          "trackingNo": { "type": "string" },
+          "pickupAt": { "type": "string", "format": "date-time" },
+          "deliveredAt": { "type": "string", "format": "date-time" },
+          "podUrl": { "type": "string" }
+        },
+        "required": ["id", "order"]
+      },
+
+      "Warehouse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "address": { "type": "string" },
+          "city": { "type": "string" },
+          "state": { "type": "string" },
+          "contact": { "type": "string" }
+        },
+        "required": ["id", "name"]
+      },
+
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "user": { "type": "string" },
+          "message": { "type": "string" },
+          "meta": { "type": "object" },
+          "read": { "type": "boolean" }
+        },
+        "required": ["id", "user", "message"]
+      },
+
+      "Commission": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "order": { "type": "string" },
+          "hospital": { "type": "string" },
+          "supplier": { "type": "string" },
+          "commissionAmount": { "type": "number" },
+          "paid": { "type": "boolean" }
+        },
+        "required": ["id", "order", "commissionAmount"]
+      },
+      "MRAssignedResponse": {
+        "type": "object",
+        "properties": {
+          "hospitals": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Hospital" }
+          }
+        }
+      },
+      "VisitNoteInput": {
+        "type": "object",
+        "required": ["hospitalId", "notes"],
+        "properties": {
+          "hospitalId": { "type": "string" },
+          "subject": { "type": "string" },
+          "notes": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "VisitNote": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "mr": { "type": "string" },
+          "hospital": { "$ref": "#/components/schemas/Hospital" },
+          "subject": { "type": "string" },
+          "notes": { "type": "string" },
+          "synced": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "VisitNoteResponse": {
+        "type": "object",
+        "properties": {
+          "note": { "$ref": "#/components/schemas/VisitNote" }
+        }
+      },
+      "VisitNoteSyncRequest": {
+        "type": "object",
+        "properties": {
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["localId", "hospitalId", "notes"],
+              "properties": {
+                "localId": { "type": "string" },
+                "hospitalId": { "type": "string" },
+                "subject": { "type": "string" },
+                "notes": { "type": "string" },
+                "createdAt": { "type": "string", "format": "date-time" }
+              }
+            }
+          }
+        }
+      },
+      "VisitNoteSyncResult": {
+        "type": "object",
+        "properties": {
+          "localId": { "type": "string" },
+          "savedId": { "type": "string" }
+        }
+      },
+      "VisitNoteSyncResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/VisitNoteSyncResult" }
+          }
+        }
+      },
+      "OrderItem": {
+        "type": "object",
+        "properties": {
+          "productId": { "type": "string" },
+          "quantity": { "type": "integer", "format": "int32" },
+          "price": { "type": "number" }
+        },
+        "required": ["productId", "quantity", "price"]
+      },
+      "OrderRequest": {
+        "type": "object",
+        "required": ["hospitalId", "items", "totalPrice"],
+        "properties": {
+          "hospitalId": { "type": "string" },
+          "supplierId": { "type": "string" },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrderItem" }
+          },
+          "totalPrice": { "type": "number" },
+          "prescriptionFileUrl": { "type": "string" }
+        }
+      },
+      "OrderResponse": {
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "object",
+            "properties": {
+              "_id": { "type": "string" },
+              "hospitalId": { "type": "string" },
+              "supplierId": { "type": "string" },
+              "items": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/OrderItem" }
+              },
+              "status": { "type": "string" },
+              "totalPrice": { "type": "number" },
+              "createdAt": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Register",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthRegister" } } } },
+        "responses": { "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } } } }
+      }
+    },
+
+    "/auth/login": {
+      "post": {
+        "summary": "Login",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthLogin" } } } },
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } } } }
+      }
+    },
+
+    "/auth/me": {
+      "get": {
+        "summary": "Get me",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } } } }
+      }
+    },
+
+    "/auth/logout": {
+      "post": {
+        "summary": "Logout",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+
+    "/products": {
+      "get": {
+        "summary": "List products",
+        "parameters": [{ "name": "q", "in": "query", "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "List", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } } } } } } } }
+      },
+      "post": {
+        "summary": "Create product",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProductCreate" } } } },
+        "responses": { "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } } }
+      }
+    },
+
+    "/products/{id}": {
+      "get": {
+        "summary": "Get product",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } } }
+      },
+      "put": {
+        "summary": "Update product",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProductCreate" } } } },
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } } }
+      },
+      "delete": {
+        "summary": "Delete product",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "204": { "description": "No Content" } }
+      }
+    },
+
+    "/inventory": {
+      "get": {
+        "summary": "List inventory",
+        "parameters": [{ "name": "product", "in": "query", "schema": { "type": "string" } }, { "name": "supplier", "in": "query", "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Inventory" } } } } } } } }
+      },
+      "post": {
+        "summary": "Create inventory",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InventoryCreate" } } } },
+        "responses": { "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Inventory" } } } } }
+      }
+    },
+
+    "/inventory/{id}": {
+      "get": { "summary": "Get inventory", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Inventory" } } } } } },
+      "put": { "summary": "Update inventory", "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InventoryCreate" } } } }, "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Inventory" } } } } } },
+      "delete": { "summary": "Delete inventory", "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "204": { "description": "Deleted" } } }
+    },
+
+    "/stocks": {
+      "get": {
+        "summary": "List hospital stocks",
+        "parameters": [{ "name": "hospital", "in": "query", "schema": { "type": "string" } }, { "name": "product", "in": "query", "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Stock" } } } } } } } }
+      },
+      "post": {
+        "summary": "Create stock entry",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Stock" } } } },
+        "responses": { "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Stock" } } } } }
+      }
+    },
+
+    "/orders": {
+      "post": {
+        "summary": "Place order",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrderCreate" } } } },
+        "responses": { "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } } }
+      },
+      "get": {
+        "summary": "Query orders",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [{ "name": "customer", "in": "query", "schema": { "type": "string" } }, { "name": "supplier", "in": "query", "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } } } } } } } }
+      }
+    },
+
+    "/orders/{id}": {
+      "get": {
+        "summary": "Get order",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } } }
+      },
+      "put": {
+        "summary": "Update order (status)",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string" } } } } } },
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } } }
+      }
+    },
+
+    "/mr/visits": {
+      "post": {
+        "summary": "MR Check-in (create visit)",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "mr": { "type": "string" }, "customer": { "type": "string" }, "checkin": { "type": "object", "properties": { "lat": { "type": "number" }, "lng": { "type": "number" } } } }, "required": ["mr", "customer", "checkin"] } } } },
+        "responses": { "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MRVisit" } } } } }
+      },
+      "get": {
+        "summary": "List MR visits (filter by mr or customer)",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [{ "name": "mr", "in": "query", "schema": { "type": "string" } }, { "name": "customer", "in": "query", "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/MRVisit" } } } } } } } }
+      }
+    },
+
+    "/shipments": {
+      "post": {
+        "summary": "Create shipment (associate to order)",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "order": { "type": "string" }, "courier": { "type": "string" }, "trackingNo": { "type": "string" } }, "required": ["order"] } } } },
+        "responses": { "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Shipment" } } } } }
+      },
+      "get": {
+        "summary": "Query shipments",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Shipment" } } } } } } } }
+      }
+    },
+
+    "/warehouses": {
+      "get": { "summary": "List warehouses", "responses": { "200": { "description": "OK" } } },
+      "post": {
+        "summary": "Create warehouse",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Warehouse" } } } },
+        "responses": { "201": { "description": "Created" } }
+      }
+    },
+
+    "/notifications": {
+      "get": {
+        "summary": "Get notifications for user",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Notification" } } } } } } } }
+      },
+      "post": {
+        "summary": "Create notification (admin/system)",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "user": { "type": "string" }, "message": { "type": "string" }, "meta": { "type": "object" } }, "required": ["user", "message"] } } } },
+        "responses": { "201": { "description": "Created" } }
+      }
+    },
+
+    "/commissions": {
+      "get": {
+        "summary": "Get commissions (admin) or by supplier (supplier)",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [{ "name": "supplier", "in": "query", "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Commission" } } } } } } } }
+      }
+    },
+
+    "/admin/hospitals": {
+      "get": {
+        "summary": "Admin: list hospitals",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+
+    "/admin/suppliers/{id}/approve": {
+      "put": {
+        "summary": "Admin: approve supplier",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+     "/api/mr/assigned": {
+      "get": {
+        "tags": ["MR"],
+        "summary": "Get assigned hospitals for logged-in MR",
+        "description": "Returns hospitals assigned to the authenticated MR user.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of hospitals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MRAssignedResponse"
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/api/mr/visit-notes": {
+      "post": {
+        "tags": ["MR"],
+        "summary": "Create a visit note",
+        "description": "Create a visit note for a hospital (by MR).",
+        "security": [
+          { "cookieAuth": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/VisitNoteInput" },
+              "example": {
+                "hospitalId": "64b1d2f0c9a2c8a1b2c3d4e5",
+                "subject": "Stock check",
+                "notes": "Checked 3 medicines low. Reordered 50 units each."
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Visit note created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VisitNoteResponse" }
+              }
+            }
+          },
+          "400": { "description": "Bad request" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/mr/visit-notes/sync": {
+      "post": {
+        "tags": ["MR"],
+        "summary": "Sync offline visit notes",
+        "description": "Accepts an array of locally stored visit notes and persists them server-side, returning mapping of localId -> savedId.",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/VisitNoteSyncRequest" },
+              "example": {
+                "notes": [
+                  {
+                    "localId": "local-1609459200000",
+                    "hospitalId": "64b1d2f0c9a2c8a1b2c3d4e5",
+                    "subject": "Offline visit",
+                    "notes": "Saved while offline.",
+                    "createdAt": "2025-10-23T09:00:00.000Z"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sync results",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VisitNoteSyncResponse" }
+              }
+            }
+          },
+          "400": { "description": "Bad request" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/mr/orders": {
+      "post": {
+        "tags": ["MR"],
+        "summary": "Create order on behalf of hospital",
+        "description": "Create an order for a hospital. MR can place orders on behalf of hospital users.",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OrderRequest" },
+              "example": {
+                "hospitalId": "64b1d2f0c9a2c8a1b2c3d4e5",
+                "supplierId": "64b1d3f0c9a2c8a1b2c3d4f6",
+                "items": [
+                  { "productId": "64b1d4f0c9a2c8a1b2c3d501", "quantity": 10, "price": 25 },
+                  { "productId": "64b1d4f0c9a2c8a1b2c3d502", "quantity": 5, "price": 50 }
+                ],
+                "totalPrice": 500
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderResponse" }
+              }
+            }
+          },
+          "400": { "description": "Bad request" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    }
+  }
+}

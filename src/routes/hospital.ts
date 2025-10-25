@@ -1,4 +1,4 @@
-// backend/routes/hospital.ts
+// src/routes/hospital.ts
 import express from "express";
 import {
   placeOrder,
@@ -11,9 +11,9 @@ import {
   approveHospital,
 } from "../controllers/hospitalController";
 import { auth } from "../middleware/auth";
-// ...
-import { validate } from '../middleware/validate';
-import { hospitalCreateSchema, hospitalUpdateSchema } from '../validators/hospitalValidator';
+import { validate } from "../middleware/validate";
+import { hospitalCreateSchema, hospitalUpdateSchema } from "../validators/hospitalValidator";
+import { orderCreateSchema } from "../validators/orderValidator";
 
 const router = express.Router();
 
@@ -43,7 +43,8 @@ router.post('/', auth(['hospital','admin']), validate(hospitalCreateSchema), cre
 
 router.put('/:id', auth(['admin','hospital']), validate(hospitalUpdateSchema), updateHospital);
 
+// Orders under hospital route (place & list)
 router.get("/orders", auth(["hospital", "admin"]), getOrders);
-router.post("/orders", auth(["hospital", "admin"]), placeOrder);
+router.post("/orders", auth(["hospital", "admin"]), validate(orderCreateSchema), placeOrder);
 
 export default router;

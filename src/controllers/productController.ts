@@ -1,79 +1,73 @@
+// src/controllers/productController.ts
 import { Request, Response } from "express";
 import Product from "../models/Product";
 
-// Create Product
-export const createProduct = async (req: Request, res: Response) => {
+export const createProduct = async (req: any, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-    // Get uploaded images file paths
-    const imagePaths = (req.files as Express.Multer.File[]).map(
-      (file) => `/uploads/${file.filename}`
-    );
+    const imagePaths = Array.isArray(req.files)
+      ? (req.files as Express.Multer.File[]).map((f) => `/uploads/${f.filename}`)
+      : [];
 
-    const product = await Product.create({
+    const doc = await Product.create({
       ...req.body,
       images: imagePaths,
       createdBy: req.user.id,
     });
-
-    res.status(201).json(product);
-  } catch (err) {
-    res.status(400).json({ message: (err as Error).message });
+    res.status(201).json({ data: doc });
+  } catch (err: any) {
+    res.status(400).json({ message: err.message });
   }
 };
 
-// Get All Products
-export const getProducts = async (_req: Request, res: Response) => {
+export const getProducts = async (req: Request, res: Response) => {
   try {
-    const products = await Product.find();
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ message: (err as Error).message });
+    const { q, page = 1, limit = 30 } = req.query;
+    const filter: any = {};
+    if (q) filter.$text = { $search: String(q) };
+
+    const products = await Product.find(filter)
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit));
+    res.json({ data: products });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-// Get Single Product By ID
 export const getProductById = async (req: Request, res: Response) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: "Product not found" });
-    res.json(product);
-  } catch (err) {
-    res.status(500).json({ message: (err as Error).message });
+    const p = await Product.findById(req.params.id);
+    if (!p) return res.status(404).json({ message: "Product not found" });
+    res.json({ data: p });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-// Update Product By ID
-export const updateProduct = async (req: Request, res: Response) => {
+export const updateProduct = async (req: any, res: Response) => {
   try {
-    let imagePaths: string[] | undefined = undefined;
-    if (req.files) {
-      imagePaths = (req.files as Express.Multer.File[]).map(
-        (file) => `/uploads/${file.filename}`
-      );
-    }
+    const imagePaths = Array.isArray(req.files)
+      ? (req.files as Express.Multer.File[]).map((f) => `/uploads/${f.filename}`)
+      : undefined;
 
-    const updateData = {
-      ...req.body,
-      ...(imagePaths ? { images: imagePaths } : {}),
-    };
+    const update: any = { ...req.body };
+    if (imagePaths) update.images = imagePaths;
 
-    const product = await Product.findByIdAndUpdate(req.params.id, updateData, { new: true });
-    if (!product) return res.status(404).json({ message: "Product not found" });
-    res.json(product);
-  } catch (err) {
-    res.status(400).json({ message: (err as Error).message });
+    const updated = await Product.findByIdAndUpdate(req.params.id, update, { new: true });
+    if (!updated) return res.status(404).json({ message: "Product not found" });
+    res.json({ data: updated });
+  } catch (err: any) {
+    res.status(400).json({ message: err.message });
   }
 };
 
-// Delete Product By ID
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    await Product.findByIdAndDelete(req.params.id);
     res.json({ message: "Product deleted" });
-  } catch (err) {
-    res.status(500).json({ message: (err as Error).message });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
   }
 };

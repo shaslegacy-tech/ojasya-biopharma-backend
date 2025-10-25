@@ -1,37 +1,34 @@
-// backend/services/hospitalService.ts
-import Hospital from '../models/Hospital';
-import mongoose from 'mongoose';
+// src/services/hospitalService.ts
+import Hospital from "../models/Hospital";
+import { Types } from "mongoose";
+import { toObjectId } from "../utils/oObjectId";
 
-class HospitalService {
-  static async createHospital(data: any, userId?: string) {
-    if (userId) data.userId = new mongoose.Types.ObjectId(userId);
-    const hospital = await Hospital.create(data);
-    return hospital;
-  }
+const HospitalService = {
+  async createHospital(data: any, userId?: string) {
+    if (userId) data.userId = toObjectId(userId);
+    const doc = await Hospital.create(data);
+    return doc;
+  },
 
-  static async listHospitals(filter = {}, options = {}) {
-    return Hospital.find(filter)
-      .sort({ createdAt: -1 })
-      .lean();
-  }
+  async listHospitals(filter = {}) {
+    return Hospital.find(filter).sort({ createdAt: -1 }).lean();
+  },
 
-  static async getById(id: string) {
-    return Hospital.findById(id).lean();
-  }
+  async getById(id: string) {
+    return Hospital.findById(toObjectId(id)).lean();
+  },
 
-  static async updateHospital(id: string, update: any) {
-    const hospital = await Hospital.findByIdAndUpdate(id, update, { new: true });
-    return hospital;
-  }
+  async updateHospital(id: string, update: any) {
+    return Hospital.findByIdAndUpdate(toObjectId(id), update, { new: true });
+  },
 
-  static async deleteHospital(id: string) {
+  async deleteHospital(id: string) {
     return Hospital.findByIdAndDelete(id);
-  }
+  },
 
-  static async approveHospital(id: string) {
-    const hospital = await Hospital.findByIdAndUpdate(id, { approved: true }, { new: true });
-    return hospital;
-  }
-}
+  async approveHospital(id: string) {
+    return Hospital.findByIdAndUpdate(id, { approved: true }, { new: true });
+  },
+};
 
 export default HospitalService;

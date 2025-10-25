@@ -1,20 +1,30 @@
-// backend/models/Commission.ts
-import mongoose, { Schema, Document } from 'mongoose';
+// src/models/Commission.ts
+import { Schema, model, Document } from "mongoose";
+import { toJSONPlugin } from "./plugins/mongoose-plugins";
 
 export interface ICommission extends Document {
-  orderId: mongoose.Types.ObjectId;
-  hospitalId: mongoose.Types.ObjectId;
-  supplierId: mongoose.Types.ObjectId;
+  order: Schema.Types.ObjectId;
+  hospital: Schema.Types.ObjectId;
+  supplier: Schema.Types.ObjectId;
   commissionAmount: number;
   paid: boolean;
+  paidAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const CommissionSchema: Schema = new Schema({
-  orderId: { type: Schema.Types.ObjectId, ref: 'Order', required: true },
-  hospitalId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  supplierId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  commissionAmount: { type: Number, required: true },
-  paid: { type: Boolean, default: false }
-}, { timestamps: true });
+const CommissionSchema = new Schema<ICommission>(
+  {
+    order: { type: Schema.Types.ObjectId, ref: "Order", required: true },
+    hospital: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    supplier: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    commissionAmount: { type: Number, required: true },
+    paid: { type: Boolean, default: false },
+    paidAt: Date,
+  },
+  { timestamps: true }
+);
 
-export default mongoose.model<ICommission>('Commission', CommissionSchema);
+CommissionSchema.plugin(toJSONPlugin);
+
+export default model<ICommission>("Commission", CommissionSchema);

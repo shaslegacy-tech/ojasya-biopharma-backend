@@ -12,6 +12,3 @@ router.get('/orders', auth(["admin"]), getAllOrders);
 router.get('/commissions', auth(["admin"]), getCommissions);
 
 export default router;
-
-
-// hospital name, email, phone, contact personal, address, city, state, zip, country, dl number, gst number, createdAt, updatedAt

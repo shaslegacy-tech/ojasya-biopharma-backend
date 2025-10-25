@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post("/register", register);
 router.post("/login", login);
-router.get("/me", auth(["hospital", "supplier", "admin"]), me);
+router.get("/me", auth(), me);
 router.post("/logout", logout); // ✅ new logout route
 
 export default router;

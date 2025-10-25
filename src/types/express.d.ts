@@ -1,10 +1,16 @@
-// types/express.d.ts
-import { IUser } from "../models/User";
+// src/types/express.d.ts
+import { Role } from "../models/enums";
 
 declare global {
   namespace Express {
     interface Request {
-      user?: IUser & { _id: string; role: string };
+      user?: {
+        id: string;
+        email?: string;
+        role: Role | string;
+      };
     }
   }
 }
+
+export {};
